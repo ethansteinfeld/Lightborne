@@ -30,35 +30,18 @@ pub struct StartFlag {
     pub level_iid: String,
 }
 
-/// [`Bundle`] spawned in by Ldtk corresponding to start flags.
-#[derive(Default, Bundle, LdtkEntity)]
-pub struct StartFlagBundle {
-    flag: StartFlag,
-    marker: StartMarker,
-    #[from_entity_instance]
-    instance: EntityInstance,
-}
-
-/// Initializes the start maker with the `level_iid`, which must be gotten with queries.
-///
-/// We can consider inserting the [`StartFlag`] directly into the entity that represents the level in
-/// ldtk, allowing us to query for the [`StartFlag`] through the
-/// [`CurrentLevel`](super::CurrentLevel) [`Resource`].
-pub fn init_start_marker(
-    mut commands: Commands,
-    q_start_flag: Query<(Entity, &Parent), Added<StartMarker>>,
-    q_parent: Query<&Parent, Without<StartMarker>>,
-    q_level: Query<&LevelIid>,
-) {
-    for (entity, parent) in q_start_flag.iter() {
-        let Ok(level_entity) = q_parent.get(parent.get()) else {
-            continue;
-        };
-        let Ok(level_iid) = q_level.get(level_entity.get()) else {
-            continue;
-        };
-        commands.entity(entity).insert(StartFlag {
-            level_iid: level_iid.to_string(),
-        });
+impl LdtkEntity for StartFlag {
+    fn bundle_entity(
+        _: &EntityInstance,
+        _: &LayerInstance,
+        level: ldtk::loaded_level::LoadedLevel,
+        _: Option<&Handle<Image>>,
+        _: Option<&TilesetDefinition>,
+        _: &AssetServer,
+        _: &mut Assets<TextureAtlasLayout>,
+    ) -> Self {
+        StartFlag {
+            level_iid: level.iid().to_string(),
+        }
     }
 }

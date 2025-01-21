@@ -5,17 +5,15 @@ use bevy::{
 use bevy_ecs_ldtk::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::input::update_cursor_world_coords;
+use crate::{input::update_cursor_world_coords, shared::GroupLabel};
 
 use kill::{reset_player_on_level_switch, reset_player_position, KillPlayerEvent};
 use light::{handle_color_switch, preview_light_path, shoot_light, PlayerLightInventory};
 use movement::{move_player, queue_jump, PlayerMovement};
-use spawn::{add_player_sensors, init_player_bundle};
 
 mod kill;
 pub mod light;
 pub mod movement;
-mod spawn;
 
 /// [`Plugin`] for anything player based.
 pub struct PlayerManagementPlugin;
@@ -23,7 +21,6 @@ pub struct PlayerManagementPlugin;
 impl Plugin for PlayerManagementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<KillPlayerEvent>()
-            .add_systems(Update, add_player_sensors) // ran when LDTK spawns the player
             .add_systems(FixedUpdate, move_player)
             .add_systems(
                 Update,
@@ -67,20 +64,67 @@ pub struct PlayerBundle {
     restitution: Restitution,
     player_movement: PlayerMovement,
     light_inventory: PlayerLightInventory,
+    sprite: Sprite,
+    worldly: Worldly,
+    player_marker: PlayerMarker,
 }
 
-/// [`Bundle`] registered with Ldtk that will be spawned in with the level.
-#[derive(Default, Bundle, LdtkEntity)]
-pub struct LdtkPlayerBundle {
-    player_marker: PlayerMarker,
-    #[with(init_player_bundle)]
-    player: PlayerBundle,
-    #[sprite("lyra.png")]
-    sprite: Sprite,
-    #[worldly]
-    worldly: Worldly,
-    #[from_entity_instance]
-    instance: EntityInstance,
+impl LdtkEntity for PlayerBundle {
+    fn bundle_entity(
+        entity_instance: &EntityInstance,
+        _layer_instance: &LayerInstance,
+        _level: ldtk::loaded_level::LoadedLevel,
+        _tileset: Option<&Handle<Image>>,
+        _tileset_definition: Option<&TilesetDefinition>,
+        asset_server: &AssetServer,
+        _texture_atlases: &mut Assets<TextureAtlasLayout>,
+    ) -> Self {
+        PlayerBundle {
+            body: RigidBody::KinematicPositionBased,
+            controller: KinematicCharacterController {
+                offset: CharacterLength::Absolute(1.0),
+                ..default()
+            },
+            controller_output: KinematicCharacterControllerOutput::default(),
+            collider: Collider::cuboid(6.0, 9.0),
+            collision_groups: CollisionGroups::new(
+                GroupLabel::PLAYER_COLLIDER,
+                GroupLabel::TERRAIN,
+            ),
+            friction: Friction {
+                coefficient: 0.,
+                combine_rule: CoefficientCombineRule::Min,
+            },
+            restitution: Restitution {
+                coefficient: 0.,
+                combine_rule: CoefficientCombineRule::Min,
+            },
+            player_movement: PlayerMovement::default(),
+            light_inventory: PlayerLightInventory::default(),
+            sprite: Sprite::from_image(asset_server.load("lyra.png")),
+            worldly: Worldly::from_entity_info(entity_instance),
+            player_marker: PlayerMarker,
+        }
+    }
+
+    fn extend_entity<'b, 'a>(
+        commands: &'b mut EntityCommands<'a>,
+        _: &Self,
+    ) -> &'b mut EntityCommands<'a> {
+        commands.with_children(|parent| {
+            parent
+                .spawn(Collider::cuboid(5.0, 6.0))
+                .insert(Sensor)
+                .insert(CollisionGroups::new(
+                    GroupLabel::PLAYER_SENSOR,
+                    GroupLabel::HURT_BOX,
+                ))
+                .insert(PointLight {
+                    intensity: 100_000.0,
+                    ..default()
+                });
+        })
+    }
 }
 
 /// [`System`] that will send a [`KillPlayerEvent`] when the "R" key is pressed.

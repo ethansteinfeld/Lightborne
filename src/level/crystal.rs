@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
 use super::{
-    activatable::{init_activatable, update_activatables, Activatable, Activated},
+    activatable::{update_activatables, Activatable, Activated},
     entity::FixedEntityBundle,
     LevelSwitchEvent,
 };
@@ -39,7 +39,7 @@ pub struct CrystalBundle {
     sprite: Sprite,
     #[from_entity_instance]
     instance: EntityInstance,
-    #[with(init_activatable)]
+    #[from_entity_instance]
     activatable: Activatable,
 }
 

@@ -1,0 +1,3 @@
+[submodule "external/bevy_ecs_ldtk"]
+	path = external/bevy_ecs_ldtk
+	url = git@github.com:raybbian/bevy_ecs_ldtk.git

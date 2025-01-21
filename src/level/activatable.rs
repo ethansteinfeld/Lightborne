@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use bevy_ecs_ldtk::*;
-use prelude::LdtkFields;
+use bevy_ecs_ldtk::prelude::*;
 
 use crate::light::sensor::update_light_sensors;
 
@@ -93,20 +92,20 @@ pub fn update_activatables(
     }
 }
 
-/// Initialization function to be used to intialize [`Activatable`] LDTK entities. See
-/// [`crate::level::crystal::CrystalBundle`] for an example of how this can be done.
-pub fn init_activatable(entity_instance: &EntityInstance) -> Activatable {
-    let id = entity_instance
-        .get_int_field("id")
-        .expect("Activatable id should exist and be an integer");
+impl From<&EntityInstance> for Activatable {
+    fn from(entity_instance: &EntityInstance) -> Self {
+        let id = entity_instance
+            .get_int_field("id")
+            .expect("Activatable id should exist and be an integer");
 
-    let active = entity_instance
-        .get_bool_field("active")
-        .expect("Activatable active status should exist and be a boolean");
+        let active = entity_instance
+            .get_bool_field("active")
+            .expect("Activatable active status should exist and be a boolean");
 
-    Activatable {
-        id: *id,
-        init_active: *active,
+        Activatable {
+            id: *id,
+            init_active: *active,
+        }
     }
 }
 

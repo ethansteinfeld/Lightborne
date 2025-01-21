@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 
-use crate::player::{LdtkPlayerBundle, PlayerMarker};
+use crate::player::{PlayerBundle, PlayerMarker};
 use activatable::ActivatablePlugin;
 use crystal::CrystalPlugin;
-use misc::{init_start_marker, ButtonBundle, StartFlagBundle};
+use misc::{ButtonBundle, StartFlag};
 use setup::LevelSetupPlugin;
 use walls::{spawn_wall_collision, WallBundle};
 
@@ -33,12 +33,11 @@ impl Plugin for LevelManagementPlugin {
                 },
                 ..default()
             })
-            .register_ldtk_entity::<LdtkPlayerBundle>("Lyra")
+            .register_ldtk_entity::<PlayerBundle>("Lyra")
             .register_ldtk_entity::<ButtonBundle>("Button")
-            .register_ldtk_entity::<StartFlagBundle>("Start")
+            .register_ldtk_entity::<StartFlag>("Start")
             .register_ldtk_int_cell::<WallBundle>(1)
             .add_systems(Update, spawn_wall_collision)
-            .add_systems(Update, init_start_marker)
             .add_systems(Update, switch_level);
     }
 }

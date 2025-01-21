@@ -22,6 +22,8 @@ pub fn reset_player_position(
         return;
     };
 
+    println!("Player position: {:?}", transform);
+
     if ev_kill_events.is_empty() {
         return;
     }
